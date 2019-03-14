@@ -154,7 +154,6 @@ def loop_area(nlat_1 = 28, slat_1 = -6, wlon_1 = 162, elon_1 = 322,#dominio tota
                         
             matriz_final.iloc[coun_lat, coun_lon]  = vt_2
     
-    
     ff = open(str(raster)+'.asci', 'w')
     with open(str(raster)+'.asci', 'w') as ff:
         print('ncols '+str(len(matriz_final.columns.values)), file=ff)
@@ -169,6 +168,8 @@ def loop_area(nlat_1 = 28, slat_1 = -6, wlon_1 = 162, elon_1 = 322,#dominio tota
 
 
     ###Creación del archivo NetCDF
+    os.popen('touch '+raster+'.nc') # Se crean estos archivos temporales, porque si el archivo está repetido presenta un error.
+    os.popen('rm '+raster+'.nc')
     dataset = Dataset(raster+'.nc', 'w', fromat='NETCDF4_CLASSIC') 
     #dataset = Dataset('hola.nc', 'w', fromat='NETCDF4_CLASSIC') 
     level = dataset.createDimension('level', 0) 
