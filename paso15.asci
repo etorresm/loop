@@ -1,8 +1,0 @@
-ncols 11
-nrows 2
-xllcenter -193.0
-yllcenter 8.0
-cellsize 15
-nodata_value -9999
-NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN
-NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN
