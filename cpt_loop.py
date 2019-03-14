@@ -6,18 +6,18 @@ script para encontrar áreas en el cpt
 @author: edwin
 """
 import pandas as pd
-#import numpy as np
+import numpy as np
 import pdb
 import os
 import time
+from netCDF4 import Dataset
 
-
-#nlat_1 = 28; slat_1 = -6; wlon_1 = 162; elon_1 = 322; lat_2) = 12; lon_2) = 12
+#nlat_1 = 28; slat_1 = -6; wlon_1 = 162; elon_1 = 322; lat_2 = 12; lon_2 = 12
 #pasox=0.55; pasoy = 0.55
 
 #nlat_1 = 90, slat_1 = -90, wlon_1 = -10, elon_1 = 349,
 def loop_area(nlat_1 = 28, slat_1 = -6, wlon_1 = 162, elon_1 = 322,#dominio total
-              lat_2) = 10, lon_2) = 10, paso = 10, # Dominio de muestreo y paso Ojo lo que esté con y se entiende como la variable predictora
+              lat_2 = 10, lon_2 = 10, paso = 10, # Dominio de muestreo y paso Ojo lo que esté con y se entiende como la variable predictora
               variable_x = '/home/edwin/.wine/drive_c/CPT/basura/sst_2000_2018.tsv',
               variable_y = '/home/edwin/.wine/drive_c/CPT/basura/precip_2000_2018.tsv', 
               minimum_number_modes_x = 1,
@@ -43,16 +43,16 @@ def loop_area(nlat_1 = 28, slat_1 = -6, wlon_1 = 162, elon_1 = 322,#dominio tota
     ##cambia sólo el paso, entonces se crean pixeles más finos que opcuparán la 
     ##posición ((longitud del subdomínio)/2). Esto quiere decir que el primer pixel
     ##tendrá centro en la misma ubicación
-    #matriz_15 = loop_area(paso=15, raster='paso15', lat_2) = 10, lon_2) = 10)
-    #matriz_10_15 = loop_area(paso=10, raster='paso10_15', lat_2) = 10, lon_2) = 10)
-    #matriz_5_15 = loop_area(paso=5, raster='paso5_15', lat_2) = 10, lon_2) = 10)
+    #matriz_15 = loop_area(paso=15, raster='paso15', lat_2 = 10, lon_2 = 10)
+    #matriz_10_15 = loop_area(paso=10, raster='paso10_15', lat_2 = 10, lon_2 = 10)
+    #matriz_5_15 = loop_area(paso=5, raster='paso5_15', lat_2 = 10, lon_2 = 10)
     #         
     #Cuando se valla a hacer mapas es mejor usar la proyección EPSG=3832
     
     #pdb.set_trace()
     #Primer punto
-    dx1 = wlon_1 + (lon_2) /2)
-    dy1 = nlat_1 - (lat_2) / 2)
+    dx1 = wlon_1 + (lon_2 /2)
+    dy1 = nlat_1 - (lat_2 / 2)
     
     #Copia de seguridad del punto 1 se inicia en la esquina superior
     dx2 = dx1
@@ -62,8 +62,8 @@ def loop_area(nlat_1 = 28, slat_1 = -6, wlon_1 = 162, elon_1 = 322,#dominio tota
     base_y = pd.DataFrame()
     
     while dy2 > slat_1:
-        nl = dy2 + (lat_2) / 2)
-        sl = dy2 - (lat_2) / 2)
+        nl = dy2 + (lat_2 / 2)
+        sl = dy2 - (lat_2 / 2)
         
         base_y2 = pd.DataFrame({'lat':[dy2],
                                 'lat_sup':[nl],
@@ -77,8 +77,8 @@ def loop_area(nlat_1 = 28, slat_1 = -6, wlon_1 = 162, elon_1 = 322,#dominio tota
     base_x = pd.DataFrame()        
     
     while dx2 < elon_1:
-        wl = dx2 - (lon_2) / 2)
-        el = dx2 + (lon_2) / 2)
+        wl = dx2 - (lon_2 / 2)
+        el = dx2 + (lon_2 / 2)
         
         base_x2 = pd.DataFrame({'lon':[dx2],
                                  'lon_iz':[wl],
@@ -164,8 +164,37 @@ def loop_area(nlat_1 = 28, slat_1 = -6, wlon_1 = 162, elon_1 = 322,#dominio tota
         print('cellsize '+str(paso), file=ff)
         print('nodata_value -9999', file=ff)
         print(matriz_final.to_string(index=False, header=False), file=ff)
-              
-    return(matriz_final)            
+    
+    
 
-matriz_5 = loop_area(paso=15, raster='paso5', lat_2) = 5, lon_2) = 5)
-#detallado = loop_area(paso=5, raster='paso5_5_2', lat_2) = 5, lon_2) = 5)
+
+    ###Creación del archivo NetCDF
+    dataset = Dataset(raster+'.nc', 'w', fromat='NETCDF4_CLASSIC') 
+    #dataset = Dataset('hola.nc', 'w', fromat='NETCDF4_CLASSIC') 
+    level = dataset.createDimension('level', 0) 
+    lat = dataset.createDimension('lat', len(base_y.lat))
+    lon = dataset.createDimension('lon', len(base_x.lon)) 
+    time = dataset.createDimension('time', None)
+
+    times = dataset.createVariable('time', np   .float64, ('time',)) 
+    levels = dataset.createVariable('level', np.int32, ('level',)) 
+    latitudes = dataset.createVariable('latitude', np.float32,   ('lat',))
+    longitudes = dataset.createVariable('longitude', np.float32,  ('lon',)) 
+
+    corr = dataset.createVariable('cor_1', np.float32, ('time','level','lat','lon'))
+
+    latitudes[:] = base_y.lat.tolist()
+    longitudes[:] =  base_x.lon.tolist()
+    
+    #Llenado de los datos
+    #pdb.set_trace()              
+    corr[0,0,:,:] = matriz_final.as_matrix()
+
+    ##Finalización del netcdf
+    dataset.close()
+
+
+
+    return(matriz_final)       
+
+matriz_15 = loop_area(paso=15, raster='paso15', lat_2 = 10, lon_2 = 10)
