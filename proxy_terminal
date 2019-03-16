@@ -48,7 +48,6 @@ function proxy_off(){
     echo -e "Proxy environment variable removed."
 }
 
-source /usr/local/ferret/ferret_paths
 
 echo "Entre su nombre de usuario (unal) y clave para configuración del proxy (dejar en blanco si no necesita conexión con el resto del universo):"
 proxy_on unal
